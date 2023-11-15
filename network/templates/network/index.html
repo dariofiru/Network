@@ -1,0 +1,31 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+ 
+ 
+    <h2>{{ request.user.email }}</h2>
+
+   
+    <div><form method="post"  action="{% url 'index' %}">
+        {% csrf_token %}
+        {{PostForm.post}}
+        <br><input type="submit">
+
+    </form><br>{{check}}
+        </div>
+    <div id="posts-view"> 
+    </div>
+     
+
+ 
+
+{% endblock %}
+
+{% block script %}
+  
+    <script src="{% static 'network/posts.js' %}"></script> 
+
+    
+{% endblock %}
+
