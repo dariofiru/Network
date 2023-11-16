@@ -40,14 +40,18 @@ async function load_posts(){
             user_box.innerHTML=`<b><font style="font-size:20px">${post[i].userN}</font></b>
             <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font>`;
             const edit_link =  document.createElement("div");
+            edit_link.innerHTML=`<a href="#">Edit</a> `;
             // retrieving user name 
              
             if (current_user ===post[i].userN ){
                 post_box.innerHTML = `${post[i].post}`;
+                post_box.prepend(edit_link)
+                
             }else {
                 post_box.innerHTML = `${post[i].post}`;
             }
             post_box.prepend(user_box)
+            
             post_box.className = 'post_box';
             post_box.id='post_box';
             post_box.style.border="1px solid gray";
