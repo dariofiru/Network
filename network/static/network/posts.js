@@ -3,22 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-async function getUser(id) {
-    var user_nameT ="";
-    await  fetch(`get_user/${id}`)
-    .then(response => response.text())
-    .then(text => {
-        var user_name = JSON.parse(text);
-        console.log(text);
-        console.log(user_name[0].username);
-        user_nameT = user_name[0].username;
-    });
-    
-    return user_nameT;
-}
-
-
-async function fetchLikes() {
+ async function fetchLikes() {
     var my_likesR = [];
     await  fetch("likes")
     .then(response => response.text())
@@ -36,7 +21,7 @@ async function fetchLikes() {
 async function load_posts(){
      
     document.querySelector('#posts-view').style.display = 'block';
-     
+     console.log(current_user);
     var my_likes = [];
     await  fetchLikes().then(my_likesR => {
         my_likes= my_likesR; // fetched movies
@@ -66,18 +51,14 @@ async function load_posts(){
             let likes=post[i].tot_likes;
             const post_box =  document.createElement("div");
             // retrieving user name 
-            var user_name = "";
-            getUser(post[i].user_post).then(user_nameR => {
-                user_name= user_nameR; // fetched movies
-              });
+             
 
-              console.log("nome:" + user_name);
-
-            post_box.innerHTML = `${post[i].user_post}<br>-${user_name}<br>
+            post_box.innerHTML = `<b><font style="font-size:20px">${post[i].userN}</font></b>
+            <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font><br><br>
             ${post[i].post}`;
             post_box.className = 'post_box';
             post_box.id='post_box';
-            post_box.style.border="1px solid black";
+            post_box.style.border="1px solid gray";
             post_box.style.paddingLeft="20px"
             post_box.style.paddingTop="10px"
 
@@ -156,7 +137,7 @@ async function load_posts(){
                   likes_box.prepend(like_button)
                   return false;
             });
-            //console.log(post);
+            console.log(post);
         }
     });
 }  
