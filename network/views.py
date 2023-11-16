@@ -118,8 +118,9 @@ def add_post(request):
         
 def add_like(request, id):
     if request.method == "PUT":
+        post = None 
         try:
-            post = Post.objects.filter(id=id, user_post=request.user).get()
+            post = Post.objects.filter(id=id).get()
         except Post.DoesNotExist:
             HttpResponse("error")
         
@@ -134,7 +135,7 @@ def add_like(request, id):
 def remove_like(request, id):
     if request.method == "PUT":
         try:
-            post = Post.objects.filter(id=id, user_post=request.user).get()
+            post = Post.objects.filter(id=id).get()
         except Post.DoesNotExist:
             HttpResponse("error")
         try:
@@ -149,3 +150,15 @@ def remove_like(request, id):
         return render(request, "network/index.html", {
                 "PostForm": form
             })    
+
+@login_required
+def get_user(request, id):
+    userT = None
+    try:
+        userT = User.objects.filter(id=id)
+    except Post.DoesNotExist:
+        HttpResponse("error")
+    #posts = Post.objects.filter(user_post=request.user)
+    #userT = User.objects.all()
+     
+    return JsonResponse([user.serialize() for user in userT], safe=False)

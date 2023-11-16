@@ -5,6 +5,11 @@ from django.db import models
 class User(AbstractUser):
     pass
 
+    def serialize(self):
+        return {
+            "username": self.username 
+        }
+
 class Post(models.Model):
     user_post = models.ForeignKey("User", on_delete=models.CASCADE, related_name="posts")
     timestamp = models.DateTimeField(auto_now_add=True)
