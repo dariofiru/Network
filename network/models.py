@@ -45,5 +45,20 @@ class Like(models.Model):
             "post_like": self.post_like.id,
             "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p") 
         }
+
+class Follower(models.Model):
+    user_followed = models.ForeignKey("User", on_delete=models.CASCADE, related_name="followed")
+    user_follower = models.ForeignKey("User", on_delete=models.CASCADE, related_name="follower")
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"{self.user_follower} Follows: {self.user_followed}"
     
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_followed": self.user_followed.id,
+            "user_follower": self.user_follower.id,
+            "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p") 
+        }   
     

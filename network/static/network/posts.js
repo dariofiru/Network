@@ -27,21 +27,7 @@ async function load_posts(){
         my_likes= my_likesR; // fetched movies
       });
 
-    // retrieve likes 
-    //var my_likes = [];
-    //fetch("likes")
-    //.then(response => response.text())
-    //.then(text => {
-    //    var like = JSON.parse(text);
-    //    for (var i in like){
-    //        my_likes.push(like[i].post_like);
-    //        console.log(like[i].post_like)
-    //    }
-        
-    //});
-    //retrieve posts
-    
-
+   
     fetch("posts")
     .then(response => response.text())
     .then(text => {
@@ -50,12 +36,18 @@ async function load_posts(){
             let post_id=post[i].id;
             let likes=post[i].tot_likes;
             const post_box =  document.createElement("div");
+            const user_box =  document.createElement("div");
+            user_box.innerHTML=`<b><font style="font-size:20px">${post[i].userN}</font></b>
+            <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font>`;
+            const edit_link =  document.createElement("div");
             // retrieving user name 
              
-
-            post_box.innerHTML = `<b><font style="font-size:20px">${post[i].userN}</font></b>
-            <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font><br><br>
-            ${post[i].post}`;
+            if (current_user ===post[i].userN ){
+                post_box.innerHTML = `${post[i].post}`;
+            }else {
+                post_box.innerHTML = `${post[i].post}`;
+            }
+            post_box.prepend(user_box)
             post_box.className = 'post_box';
             post_box.id='post_box';
             post_box.style.border="1px solid gray";
