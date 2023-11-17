@@ -1,3 +1,4 @@
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import JsonResponse
@@ -162,3 +163,16 @@ def get_user(request, id):
     #userT = User.objects.all()
      
     return JsonResponse([user.serialize() for user in userT], safe=False)
+
+def update_post(request, id):
+    data = json.loads(request.body)
+    new_post = data.get("post", "")
+
+    try:
+        post = Post.objects.filter(id=id).update(post=new_post)
+    except Post.DoesNotExist:
+        HttpResponse("error")
+
+    return HttpResponseRedirect("/")
+        
+            

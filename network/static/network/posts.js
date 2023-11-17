@@ -2,7 +2,47 @@ document.addEventListener('DOMContentLoaded', function() {
      load_posts();
 });
 
+function edit_post(post_id){
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    text_box = document.querySelector(`#text_box${post_id}`);
+    text_area= document.createElement("textarea");
+    save= document.createElement("a");
+    discard= document.createElement("a");
+    save.text="Save";
+    save.style.margin="8px";
+    save.href="#";
+    discard.text="Discard";
+    discard.href="#";
+    text_area.style.width="80%";
+    const message= text_box.innerHTML;
+    text_box.innerHTML="";
+    text_area.value=message;
+    text_box.append(text_area);
+    text_box.append(save);
+    text_box.append(discard);
+    
+    save.addEventListener('click', event => { 
+        console.log("saving");
+        fetch(`/update_post/${post_id}`, {
+            method: 'PUT',
+            headers: {'X-CSRFToken': csrftoken},
+            mode: 'same-origin',
+            body: JSON.stringify({
+                csrfmiddlewaretoken: csrftoken,
+                post: text_area.value
+            })
+          }) 
+          text_box.innerHTML=text_area.value;
+          text_box.removeChild(text_area);
+          
+    });
 
+    discard.addEventListener('click', event => { 
+        console.log("disscard");
+         
+    });
+
+}
  async function fetchLikes() {
     var my_likesR = [];
     await  fetch("likes")
@@ -37,23 +77,30 @@ async function load_posts(){
             let likes=post[i].tot_likes;
             const post_box =  document.createElement("div");
             const user_box =  document.createElement("div");
+            const text_box =  document.createElement("div");
+            text_box.margin = "5px";
+            text_box.id=`text_box${post_id}`;
             user_box.innerHTML=`<b><font style="font-size:20px">${post[i].userN}</font></b>
             <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font>`;
             const edit_link =  document.createElement("div");
-            edit_link.innerHTML=`<a href="#">Edit</a> `;
+            edit_link.innerHTML=`<a href="#">Edit</a>` ;
             // retrieving user name 
              
             if (current_user ===post[i].userN ){
-                post_box.innerHTML = `${post[i].post}`;
+                text_box.innerHTML = `${post[i].post}`;
                 post_box.prepend(edit_link)
+                edit_link.addEventListener('click', event => { 
+                    console.log("link");
+                    edit_post(post_id);
+                });
                 
             }else {
-                post_box.innerHTML = `${post[i].post}`;
+                    text_box.innerHTML = `${post[i].post}`;
             }
             post_box.prepend(user_box)
-            
+            post_box.append(text_box);
             post_box.className = 'post_box';
-            post_box.id='post_box';
+            post_box.id=`post_box${post_id}`;
             post_box.style.border="1px solid gray";
             post_box.style.paddingLeft="20px"
             post_box.style.paddingTop="10px"
@@ -88,7 +135,8 @@ async function load_posts(){
             }
             likes_box.prepend(like_button)
             post_box.append(likes_box)
-           // post_box.append(like_button)
+            //post_box.append(like_button)
+           
             document.querySelector("#posts-view").append(post_box);
 
             //document.querySelector("#posts-view").append(likes_box);

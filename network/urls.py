@@ -7,6 +7,7 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("posts", views.posts, name="posts"),
     path("likes", views.likes, name="likes"),
+    path("update_post/<str:id>", views.update_post, name="update_post"),
     path("get_user/<str:id>", views.get_user, name="get_user"),
     path("add_like/<str:id>", views.add_like, name="add_like"),
     path("remove_like/<str:id>", views.remove_like, name="remove_like"),
