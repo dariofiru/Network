@@ -61,4 +61,12 @@ class Follower(models.Model):
             "user_follower": self.user_follower.id,
             "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p") 
         }   
+
+class Profile(models.Model):
+    user_profile = models.ForeignKey("User", on_delete=models.CASCADE, related_name="profile")
+    timestamp = models.DateTimeField(auto_now_add=True)
+    picture = models.TextField(blank=False)
+    followers = models.PositiveIntegerField(default=0)
+    followed = models.PositiveIntegerField(default=0)
+ 
     

@@ -2,6 +2,12 @@ document.addEventListener('DOMContentLoaded', function() {
      load_posts();
 });
 
+function view_profile(user_post){
+    document.querySelector('#posts-view').style.display = 'none';
+    document.querySelector('#profile-view').style.display = 'block';
+    document.querySelector('#profile-view').innerHTML="profile!";
+}
+
 function edit_post(post_id){
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     text_box = document.querySelector(`#text_box${post_id}`);
@@ -39,7 +45,8 @@ function edit_post(post_id){
 
     discard.addEventListener('click', event => { 
         console.log("disscard");
-         
+        text_box.innerHTML= message;
+        text_box.removeChild(text_area);
     });
 
 }
@@ -61,6 +68,7 @@ function edit_post(post_id){
 async function load_posts(){
      
     document.querySelector('#posts-view').style.display = 'block';
+    document.querySelector('#profile-view').style.display = 'none';
      console.log(current_user);
     var my_likes = [];
     await  fetchLikes().then(my_likesR => {
@@ -75,20 +83,36 @@ async function load_posts(){
         for (var i in post){
             let post_id=post[i].id;
             let likes=post[i].tot_likes;
+            let user_post = post[i].user_post;
+            console.log(user_post)
             const post_box =  document.createElement("div");
-            const user_box =  document.createElement("div");
+            const user_box =  document.createElement("span");
             const text_box =  document.createElement("div");
             text_box.margin = "5px";
             text_box.id=`text_box${post_id}`;
-            user_box.innerHTML=`<b><font style="font-size:20px">${post[i].userN}</font></b>
-            <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font>`;
+            user_link= document.createElement("a");
+            user_link.text=`${post[i].userN}`;
+            
+            user_link.style.margin="8px";
+            user_link.style.fontSize = "20px";
+            user_link.style.fontWeight="bold";
+            user_link.style.color="black";
+            user_link.style.margin="0px";
+            user_link.href="#";
+            user_box.innerHTML=` <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font>`;
             const edit_link =  document.createElement("div");
             edit_link.innerHTML=`<a href="#">Edit</a>` ;
+            // profile event listener 
+            user_link.addEventListener('click', event => { 
+                console.log("profile");
+                view_profile(user_post);
+            });
             // retrieving user name 
-             
+            post_box.append(user_link)
+            post_box.append(user_box);
             if (current_user ===post[i].userN ){
                 text_box.innerHTML = `${post[i].post}`;
-                post_box.prepend(edit_link)
+                post_box.append(edit_link)
                 edit_link.addEventListener('click', event => { 
                     console.log("link");
                     edit_post(post_id);
@@ -97,7 +121,9 @@ async function load_posts(){
             }else {
                     text_box.innerHTML = `${post[i].post}`;
             }
-            post_box.prepend(user_box)
+
+            
+            
             post_box.append(text_box);
             post_box.className = 'post_box';
             post_box.id=`post_box${post_id}`;
@@ -181,7 +207,7 @@ async function load_posts(){
                   likes_box.prepend(like_button)
                   return false;
             });
-            console.log(post);
+            //console.log(post);
         }
     });
 }  
