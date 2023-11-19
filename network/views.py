@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from  .form import PostForm
 
-from .models import User, Post, Like
+from .models import User, Post, Like, Profile, Follower
 
 
 def index(request):
@@ -175,4 +175,44 @@ def update_post(request, id):
 
     return HttpResponseRedirect("/")
         
-            
+        
+def get_profile(request, id):
+    profileT = None
+    userT = None
+    try:
+        userT = User.objects.filter(id=id)
+        profileT = Profile.objects.filter(user_profile__in=userT)
+    except Profile.DoesNotExist:
+        HttpResponse("error")
+    #posts = Post.objects.filter(user_post=request.user)
+    #userT = User.objects.all()
+     
+    return JsonResponse([profile.serialize() for profile in profileT], safe=False)
+
+def is_follower(request, id):
+    user_followedT = None
+    try:
+        user_followedT = User.objects.filter(id=id)
+        followT = Follower.objects.filter(user_followed__in=user_followedT, user_follower=request.user).get()
+    except Follower.DoesNotExist:
+        return JsonResponse([{"follower": False}], safe=False)
+    #posts = Post.objects.filter(user_post=request.user)
+    #userT = User.objects.all()
+     
+    return JsonResponse([{"follower": True}], safe=False)
+
+def add_follower(request, id):
+     
+    user_followedT = User.objects.filter(id=id).get()
+    followT = Follower(user_followed=user_followedT, user_follower=request.user)
+    followT.save()
+    followTest = Follower.objects.count()
+    #return HttpResponse(f"added {user_followedT} => {followT} ==> {followTest}")
+    return HttpResponseRedirect("/")
+
+def remove_follower(request, id):
+    user_followedT = None
+    user_followedT = User.objects.filter(id=id)
+    followT = Follower.objects.filter(user_followed__in=user_followedT, user_follower=request.user).delete()
+    
+    return HttpResponseRedirect("/")

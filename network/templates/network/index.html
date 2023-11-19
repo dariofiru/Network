@@ -12,22 +12,29 @@
         {{PostForm.post}}
         <br><input type="submit">
 
-    </form><br> 
+    </form><br>
         </div>
     <div id="posts-view"> 
     </div>
-    <div id="profile-view"> 
-    </div>
-     
-   
-  
 
+   
+
+        <div id="profile-view" class="card" style="width: 18rem;">
+            <img id="profile-img" src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+              <h5 id="profile-name" class="card-title">Card title</h5>
+              <p id="profile-follow" class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+              <a href="#" id="profile-follow_button" class="btn btn-primary">Go somewhere</a>
+            </div>
+          </div>
+         
+
+ 
 
 {% endblock %}
 
 {% block script %}
 <script>var current_user='{{ user.username }}'</script>
-
     <script src="{% static 'network/posts.js' %}"></script> 
 
     

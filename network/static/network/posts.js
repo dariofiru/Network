@@ -2,10 +2,85 @@ document.addEventListener('DOMContentLoaded', function() {
      load_posts();
 });
 
-function view_profile(user_post){
+async function view_profile(user_post){
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     document.querySelector('#posts-view').style.display = 'none';
     document.querySelector('#profile-view').style.display = 'block';
-    document.querySelector('#profile-view').innerHTML="profile!";
+    //document.querySelector('#profile-view').innerHTML="profile!";
+    const profile_anag =  document.querySelector('#profile-view');
+    const profile_name =  document.querySelector('#profile-name');
+    const profile_follow =  document.querySelector('#profile-follow');
+    const profile_follow_button =  document.querySelector('#profile-follow_button');
+    console.log(user_post);
+    let is_follower = false;
+    await fetch(`/is_follower/${user_post}`)
+    .then(response => response.text())
+    .then(text => {
+        var follower = JSON.parse(text);
+        for (var i in follower){
+            console.log("fetch =>"+follower[i].follower + " type: "+typeof(follower[i].follower))
+            is_follower=follower[i].follower;   
+        }
+    });
+    fetch(`/get_profile/${user_post}`)
+    .then(response => response.text())
+    .then(text => {
+        var profile = JSON.parse(text);
+        for (var i in profile){
+            profile_name.innerHTML =  `Nome: ${profile[i].profile_name}`
+            profile_follow.innerHTML = `Followers: ${profile[i].followers}<br>
+            Followed: ${profile[i].followed}
+            `;
+            if(profile[i].profile_name === current_user){
+                profile_follow_button.style.display = 'none';  
+            }else{
+                console.log(typeof(is_follower)+ " => "+ is_follower)
+            if(is_follower){
+                
+                profile_follow_button.text="Unfollow"
+            }else{
+                profile_follow_button.text="Follow"
+            }
+        }
+           // console.log(profile[i].profile_name);   
+        }});
+
+        profile_follow_button.addEventListener('click', event => { 
+            if(profile_follow_button.text === "Unfollow"){
+                console.log("remove  follower")
+                fetch(`/remove_follower/${user_post}`, {
+                    method: 'PUT',
+                    headers: {'X-CSRFToken': csrftoken},
+                    mode: 'same-origin',
+                    body: JSON.stringify({
+                        csrfmiddlewaretoken: csrftoken
+                    })
+                  }).then(response=>{
+                    return response.text()
+                }).then(data=> 
+                // this is the data we get after putting our data,
+                console.log(data)
+                );
+                  profile_follow_button.text="Follow"
+            }
+            else{
+                console.log("add follower")
+                fetch(`/add_follower/${user_post}`, {
+                    method: 'PUT',
+                    headers: {'X-CSRFToken': csrftoken},
+                    mode: 'same-origin',
+                    body: JSON.stringify({
+                        csrfmiddlewaretoken: csrftoken
+                    })
+                  }).then(response=>{
+                    return response.text()
+                }).then(data=> 
+                // this is the data we get after putting our data,
+                console.log(data)
+                );
+                  profile_follow_button.text="Unfollow"
+            }
+        });
 }
 
 function edit_post(post_id){
@@ -104,7 +179,6 @@ async function load_posts(){
             edit_link.innerHTML=`<a href="#">Edit</a>` ;
             // profile event listener 
             user_link.addEventListener('click', event => { 
-                console.log("profile");
                 view_profile(user_post);
             });
             // retrieving user name 
