@@ -65,7 +65,7 @@ class Follower(models.Model):
 class Profile(models.Model):
     user_profile = models.ForeignKey("User", on_delete=models.CASCADE, related_name="profile")
     timestamp = models.DateTimeField(auto_now_add=True)
-    picture = models.TextField(blank=True)
+    picture = models.TextField(blank=True, max_length=800, default="https://th.bing.com/th/id/OIP.U6GEahoDCyMwPQIHCGiSlAHaHa?rs=1&pid=ImgDetMain")
     followers = models.PositiveIntegerField(default=0)
     followed = models.PositiveIntegerField(default=0)
 
@@ -74,9 +74,11 @@ class Profile(models.Model):
             "id": self.id,
             "user_profile": self.user_profile.id,
             "profile_name": self.user_profile.username,
+            "picture" : self.picture,
             "followers": self.followers,
             "followed": self.followed,
             "creation_date": self.timestamp.strftime("%b %d %Y, %I:%M %p") 
         }   
- 
+    def __str__(self) -> str:
+        return f"{self.user_profile}"
     

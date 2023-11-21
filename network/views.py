@@ -78,6 +78,8 @@ def register(request):
         try:
             user = User.objects.create_user(username, email, password)
             user.save()
+            profile = Profile(user_profile=user, picture=request.POST["avatar"])
+            profile.save()
         except IntegrityError:
             return render(request, "network/register.html", {
                 "message": "Username already taken."
@@ -93,7 +95,15 @@ def posts(request):
     posts = Post.objects.all()
     posts = posts.order_by("-timestamp").all()
     #return HttpResponse(f"hello {posts}")
-    return JsonResponse([post.serialize() for post in posts], safe=False)
+    json_final =[]
+    for post in posts:
+        profileT = Profile.objects.filter(user_profile=post.user_post).get()
+        post.user_post
+        json_tmp=post.serialize()
+        json_tmp["avatar"]=profileT.picture
+        json_final.append(json_tmp)
+    return JsonResponse(json_final, safe=False)
+    #return JsonResponse([post.serialize() for post in posts], safe=False)
 
 @login_required
 def likes(request):
@@ -202,17 +212,33 @@ def is_follower(request, id):
     return JsonResponse([{"follower": True}], safe=False)
 
 def add_follower(request, id):
-     
+    
     user_followedT = User.objects.filter(id=id).get()
+    profile = Profile.objects.filter(user_profile=user_followedT).get()
+    profileFollower = Profile.objects.filter(user_profile=request.user).get() 
     followT = Follower(user_followed=user_followedT, user_follower=request.user)
     followT.save()
-    followTest = Follower.objects.count()
+    # update profile 
+    profile = Profile.objects.filter(user_profile=user_followedT).update(followers=profile.followers+1)
+    profileFollower = Profile.objects.filter(user_profile=request.user).update(followed=profileFollower.followers+1)
     #return HttpResponse(f"added {user_followedT} => {followT} ==> {followTest}")
     return HttpResponseRedirect("/")
 
 def remove_follower(request, id):
     user_followedT = None
     user_followedT = User.objects.filter(id=id)
+    profile = Profile.objects.filter(user_profile=id).get() 
+    profileFollower = Profile.objects.filter(user_profile=request.user).get() 
     followT = Follower.objects.filter(user_followed__in=user_followedT, user_follower=request.user).delete()
-    
+    profile = Profile.objects.filter(user_profile=id).update(followers=profile.followers-1)
+    profileFollower = Profile.objects.filter(user_profile=request.user).update(followers=profileFollower.followers+1)
     return HttpResponseRedirect("/")
+
+
+def user_posts(request, id):
+    #posts = Post.objects.filter(user_post=request.user)
+    user_posts = User.objects.filter(id=id)
+    posts = Post.objects.filter(user_post__in=user_posts)
+    posts = posts.order_by("-timestamp").all()
+    #return HttpResponse(f"hello {posts}")
+    return JsonResponse([post.serialize() for post in posts], safe=False)

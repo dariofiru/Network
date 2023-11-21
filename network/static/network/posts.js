@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-     load_posts();
+     load_posts("posts");
 });
 
 async function view_profile(user_post){
@@ -8,6 +8,7 @@ async function view_profile(user_post){
     document.querySelector('#profile-view').style.display = 'block';
     //document.querySelector('#profile-view').innerHTML="profile!";
     const profile_anag =  document.querySelector('#profile-view');
+    const profile_img =  document.querySelector('#profile-img');
     const profile_name =  document.querySelector('#profile-name');
     const profile_follow =  document.querySelector('#profile-follow');
     const profile_follow_button =  document.querySelector('#profile-follow_button');
@@ -18,15 +19,23 @@ async function view_profile(user_post){
     .then(text => {
         var follower = JSON.parse(text);
         for (var i in follower){
-            console.log("fetch =>"+follower[i].follower + " type: "+typeof(follower[i].follower))
+           // console.log("fetch =>"+follower[i].follower + " type: "+typeof(follower[i].follower))
             is_follower=follower[i].follower;   
         }
     });
+    let followers ="";
+    let followed ="";
+
     fetch(`/get_profile/${user_post}`)
     .then(response => response.text())
     .then(text => {
         var profile = JSON.parse(text);
         for (var i in profile){
+            profile_img.src = profile[i].picture
+            profile_img.style.width="100px"
+            profile_img.style.margin="5px"
+            followers = profile[i].followers;
+            followed = profile[i].followed;
             profile_name.innerHTML =  `Nome: ${profile[i].profile_name}`
             profile_follow.innerHTML = `Followers: ${profile[i].followers}<br>
             Followed: ${profile[i].followed}
@@ -34,7 +43,7 @@ async function view_profile(user_post){
             if(profile[i].profile_name === current_user){
                 profile_follow_button.style.display = 'none';  
             }else{
-                console.log(typeof(is_follower)+ " => "+ is_follower)
+               // console.log(typeof(is_follower)+ " => "+ is_follower)
             if(is_follower){
                 
                 profile_follow_button.text="Unfollow"
@@ -44,10 +53,12 @@ async function view_profile(user_post){
         }
            // console.log(profile[i].profile_name);   
         }});
+        document.querySelector('#posts-view').style.display = 'none';
+        load_posts(`user_posts/${user_post}`);
 
         profile_follow_button.addEventListener('click', event => { 
             if(profile_follow_button.text === "Unfollow"){
-                console.log("remove  follower")
+               // console.log("remove  follower")
                 fetch(`/remove_follower/${user_post}`, {
                     method: 'PUT',
                     headers: {'X-CSRFToken': csrftoken},
@@ -59,12 +70,18 @@ async function view_profile(user_post){
                     return response.text()
                 }).then(data=> 
                 // this is the data we get after putting our data,
-                console.log(data)
+                console.log("qui")
                 );
                   profile_follow_button.text="Follow"
+                  const profile_follow_tmp =  document.querySelector('#profile-follow');
+                  followers=followers-1;
+                  profile_follow_tmp.innerHTML = `Followers: ${followers}<br>
+                Followed: ${followed}
+                `;
+                console.log(profile_follow_tmp.innerHTML)
             }
             else{
-                console.log("add follower")
+               // console.log("add follower")
                 fetch(`/add_follower/${user_post}`, {
                     method: 'PUT',
                     headers: {'X-CSRFToken': csrftoken},
@@ -76,9 +93,15 @@ async function view_profile(user_post){
                     return response.text()
                 }).then(data=> 
                 // this is the data we get after putting our data,
-                console.log(data)
+                console.log("qui")
                 );
-                  profile_follow_button.text="Unfollow"
+                profile_follow_button.text="Unfollow"
+                const profile_follow_tmp =  document.querySelector('#profile-follow');
+                followers=followers+1;
+                profile_follow_tmp.innerHTML = `Followers: ${followers}<br>
+              Followed: ${followed}
+              `;
+              console.log(profile_follow_tmp.innerHTML)
             }
         });
 }
@@ -139,34 +162,55 @@ function edit_post(post_id){
     });
     return my_likesR;
 }
+
  
-async function load_posts(){
+
+async function load_posts(link){
      
+    if(link === "posts"){
+    document.querySelector('#form-post').style.display = 'block';    
     document.querySelector('#posts-view').style.display = 'block';
     document.querySelector('#profile-view').style.display = 'none';
-     console.log(current_user);
+    }else {
+    document.querySelector('#form-post').style.display = 'none';
+    document.querySelector('#posts-view').innerHTML="";
+    document.querySelector('#posts-view').style.display = 'block';
+    //document.querySelector('#profile-view').style.display = 'none';    
+    }
+    
+
+
+    console.log(current_user);
     var my_likes = [];
     await  fetchLikes().then(my_likesR => {
         my_likes= my_likesR; // fetched movies
       });
 
    
-    fetch("posts")
+    await fetch(link)
     .then(response => response.text())
-    .then(text => {
+    .then(async text => {
         var post = JSON.parse(text);
         for (var i in post){
             let post_id=post[i].id;
             let likes=post[i].tot_likes;
             let user_post = post[i].user_post;
+            let avatar="12";
+             
             console.log(user_post)
             const post_box =  document.createElement("div");
             const user_box =  document.createElement("span");
             const text_box =  document.createElement("div");
             text_box.margin = "5px";
             text_box.id=`text_box${post_id}`;
+            
+            user_avatar= document.createElement("img");
+            user_avatar.style.margin="5px";
+            user_avatar.style.width="40px"
+            user_avatar.style.border ="1px solid gray"
+            user_avatar.src=`${post[i].avatar}`;
             user_link= document.createElement("a");
-            user_link.text=`${post[i].userN}`;
+            user_link.text=` ${post[i].userN}`;
             
             user_link.style.margin="8px";
             user_link.style.fontSize = "20px";
@@ -182,6 +226,8 @@ async function load_posts(){
                 view_profile(user_post);
             });
             // retrieving user name 
+            post_box.append(user_avatar)
+            console.log("avatar: "+user_avatar.src)
             post_box.append(user_link)
             post_box.append(user_box);
             if (current_user ===post[i].userN ){
@@ -227,9 +273,6 @@ async function load_posts(){
             }
             else {
                 like_button.innerHTML='<i class="fa fa-heart" style=" color: red">'; 
-                //like_button.textContent ="Unlike";
-                //like_button.className = 'btn btn-primary';
-                //like_button.className = 'btn_like';
                 like_button.style.margin = "5px"; 
                 action_like = `/remove_like/${post_id}`
             }
@@ -281,7 +324,8 @@ async function load_posts(){
                   likes_box.prepend(like_button)
                   return false;
             });
-            //console.log(post);
+           
         }
+        console.log(text);
     });
 }  

@@ -7,17 +7,13 @@
     <h2>{{ request.user.email }}</h2>
 
    
-    <div><form method="post"  action="{% url 'index' %}">
+    <div id="form-post"><form method="post"  action="{% url 'index' %}">
         {% csrf_token %}
         {{PostForm.post}}
         <br><input type="submit">
 
     </form><br>
         </div>
-    <div id="posts-view"> 
-    </div>
-
-   
 
         <div id="profile-view" class="card" style="width: 18rem;">
             <img id="profile-img" src="..." class="card-img-top" alt="...">
@@ -27,6 +23,14 @@
               <a href="#" id="profile-follow_button" class="btn btn-primary">Go somewhere</a>
             </div>
           </div>
+
+
+    <div id="posts-view"> 
+    </div>
+
+   
+
+        
          
 
  
