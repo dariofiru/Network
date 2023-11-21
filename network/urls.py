@@ -17,8 +17,7 @@ urlpatterns = [
     path("likes", views.likes, name="likes"),
     path("add_like/<str:id>", views.add_like, name="add_like"),
     path("remove_like/<str:id>", views.remove_like, name="remove_like"),
-
-    path("posts", views.posts, name="posts"),
+    path("posts/<str:id>", views.posts, name="posts"),
     path("user_posts/<str:id>", views.user_posts, name="user_posts"),
     path("update_post/<str:id>", views.update_post, name="update_post"),
     path("add_post", views.add_post, name="add_post"),

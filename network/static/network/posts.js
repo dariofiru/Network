@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-     load_posts("posts");
+     load_posts("posts/1");
 });
 
 async function view_profile(user_post){
@@ -167,7 +167,13 @@ function edit_post(post_id){
 
 async function load_posts(link){
      
-    if(link === "posts"){
+    let page = Number(link.match(/\d+/));
+    console.log("link: "+link)
+     
+    console.log("page: "+page)
+    if(link.toLowerCase().indexOf("user_") === -1){
+    
+    //if(link === "posts/1"){
     document.querySelector('#form-post').style.display = 'block';    
     document.querySelector('#posts-view').style.display = 'block';
     document.querySelector('#profile-view').style.display = 'none';
@@ -190,14 +196,43 @@ async function load_posts(link){
     await fetch(link)
     .then(response => response.text())
     .then(async text => {
+         
         var post = JSON.parse(text);
+        var post_Count =JSON.parse(text).length
+        console.log("post count: "+post_Count);
+        const previous = document.querySelector("#page-item-Previous")
+        const next = document.querySelector("#page-item-Next")
+        var previous_link = previous.childNodes[0];
+        var next_link = next.childNodes[0];
+        //previous_link.href = `posts/${page-1}`
+        //next_link.href = "`posts/${page+1}`"
+        next_link.addEventListener('click', event => { 
+            document.querySelector("#posts-view").innerHTML="";
+            load_posts(`posts/${page+1}`);
+        });
+        previous_link.addEventListener('click', event => { 
+            document.querySelector("#posts-view").innerHTML="";
+            load_posts(`posts/${page-1}`);
+        });
+         
+        if(post_Count>2){
+           if(page>1){
+           // previous.classList.remove("disabled");
+        } else {
+            //previous.classList.add("disabled");
+        }
+        } else {
+            //next.classList.add("disabled");
+            //previous.classList.remove("disabled");
+
+        }
         for (var i in post){
             let post_id=post[i].id;
             let likes=post[i].tot_likes;
             let user_post = post[i].user_post;
-            let avatar="12";
+            let avatar="";
              
-            console.log(user_post)
+            
             const post_box =  document.createElement("div");
             const user_box =  document.createElement("span");
             const text_box =  document.createElement("div");
@@ -227,14 +262,14 @@ async function load_posts(link){
             });
             // retrieving user name 
             post_box.append(user_avatar)
-            console.log("avatar: "+user_avatar.src)
+            
             post_box.append(user_link)
             post_box.append(user_box);
             if (current_user ===post[i].userN ){
                 text_box.innerHTML = `${post[i].post}`;
                 post_box.append(edit_link)
                 edit_link.addEventListener('click', event => { 
-                    console.log("link");
+                     
                     edit_post(post_id);
                 });
                 
@@ -326,6 +361,6 @@ async function load_posts(link){
             });
            
         }
-        console.log(text);
+       // console.log(text);
     });
 }  

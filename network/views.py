@@ -2,6 +2,7 @@ import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -90,10 +91,14 @@ def register(request):
         return render(request, "network/register.html")
     
 @login_required
-def posts(request):
+def posts(request, id):
     #posts = Post.objects.filter(user_post=request.user)
+    records=10
     posts = Post.objects.all()
     posts = posts.order_by("-timestamp").all()
+    paginator = Paginator(posts, 3)
+    posts = paginator.get_page(id)
+     
     #return HttpResponse(f"hello {posts}")
     json_final =[]
     for post in posts:
