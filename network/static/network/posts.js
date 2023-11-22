@@ -1,6 +1,45 @@
 document.addEventListener('DOMContentLoaded', function() {
-     load_posts("posts/1");
-});
+    console.log("reloading")
+
+     previous = document.querySelector("#page-item-Previous")
+     next = document.querySelector("#page-item-Next")
+     var previous_link = previous.value;
+     var next_link = next.value;
+     next.addEventListener('click', event => { 
+            console.log("click forward");
+            previous = document.querySelector("#page-item-Previous").value
+            next = document.querySelector("#page-item-Next").value
+            console.log("b: "+ previous+ "f: "+next)
+            document.querySelector("#posts-view").innerHTML="";
+            document.querySelector("#page-item-Previous").value = previous+1
+            document.querySelector("#page-item-Next").value = next+1
+            
+            load_posts(`posts/${next}`);
+        });
+    previous.addEventListener('click', event => {
+            console.log("click backward"); 
+            previous = document.querySelector("#page-item-Previous").value
+            next = document.querySelector("#page-item-Next").value
+            console.log("b: "+ previous+ "f: "+next)
+            document.querySelector("#posts-view").innerHTML="";
+            document.querySelector("#page-item-Previous").value = previous-1
+            document.querySelector("#page-item-Next").value = next-1
+
+            load_posts(`posts/${previous}`);
+        }, {once : true});
+
+
+
+    load_posts("posts/1");
+
+
+
+    });
+
+
+
+
+
 
 async function view_profile(user_post){
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -166,7 +205,7 @@ function edit_post(post_id){
  
 
 async function load_posts(link){
-     
+   
     let page = Number(link.match(/\d+/));
     console.log("link: "+link)
      
@@ -184,48 +223,55 @@ async function load_posts(link){
     //document.querySelector('#profile-view').style.display = 'none';    
     }
     
-
-
     console.log(current_user);
     var my_likes = [];
     await  fetchLikes().then(my_likesR => {
-        my_likes= my_likesR; // fetched movies
+        my_likes= my_likesR; // fetched likes
       });
 
-   
     await fetch(link)
     .then(response => response.text())
     .then(async text => {
-         
         var post = JSON.parse(text);
         var post_Count =JSON.parse(text).length
         console.log("post count: "+post_Count);
-        const previous = document.querySelector("#page-item-Previous")
-        const next = document.querySelector("#page-item-Next")
-        var previous_link = previous.childNodes[0];
-        var next_link = next.childNodes[0];
-        //previous_link.href = `posts/${page-1}`
-        //next_link.href = "`posts/${page+1}`"
-        next_link.addEventListener('click', event => { 
-            document.querySelector("#posts-view").innerHTML="";
-            load_posts(`posts/${page+1}`);
-        });
-        previous_link.addEventListener('click', event => { 
-            document.querySelector("#posts-view").innerHTML="";
-            load_posts(`posts/${page-1}`);
-        });
-         
-        if(post_Count>2){
-           if(page>1){
-           // previous.classList.remove("disabled");
+
+        if(page===1){
+            console.log("QUI!")
+            const previous = document.querySelector("#page-item-Previous")
+            previous.classList.remove("icon-hoover")
+            previous.style.color="gray"
+             
         } else {
-            //previous.classList.add("disabled");
-        }
-        } else {
-            //next.classList.add("disabled");
-            //previous.classList.remove("disabled");
+            const previous = document.querySelector("#page-item-Previous")
+            previous.classList.add("icon-hoover")
+            previous.classList.add("page-item")
+            previous.style.color="blue"
+               
 
         }
+        //const previous = document.querySelector("#page-item-Previous")
+        //const next = document.querySelector("#page-item-Next")
+        //var previous_link = previous.childNodes[0];
+        //var next_link = next.childNodes[0];
+       // next_link.removeEventListener("click", ForwardFunction);
+       // previous_link.removeEventListener("click", PreviousFunction);
+       
+
+        //next_link.addEventListener('click', event => { 
+        //    console.log("click forward");
+        //    document.querySelector("#posts-view").innerHTML="";
+        //    page=page+1
+        //    load_posts(`posts/${page}`);
+        //});
+       // previous_link.addEventListener('click', event => {
+        //    console.log("click backward"); 
+         //   document.querySelector("#posts-view").innerHTML="";
+          //  page=page-1
+          //  load_posts(`posts/${page}`);
+        //}, {once : true});
+         
+      
         for (var i in post){
             let post_id=post[i].id;
             let likes=post[i].tot_likes;
@@ -277,8 +323,6 @@ async function load_posts(link){
                     text_box.innerHTML = `${post[i].post}`;
             }
 
-            
-            
             post_box.append(text_box);
             post_box.className = 'post_box';
             post_box.id=`post_box${post_id}`;
@@ -361,6 +405,6 @@ async function load_posts(link){
             });
            
         }
-       // console.log(text);
+       console.log(text);
     });
 }  
