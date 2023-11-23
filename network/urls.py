@@ -18,7 +18,12 @@ urlpatterns = [
     path("add_like/<str:id>", views.add_like, name="add_like"),
     path("remove_like/<str:id>", views.remove_like, name="remove_like"),
     path("posts/<str:id>", views.posts, name="posts"),
-    path("user_posts/<str:id>", views.user_posts, name="user_posts"),
+
+    
+    path("count_posts/<str:id>", views.count_posts, name="count_posts"),
+    
+    path("user_posts/<str:page>/<str:id>", views.user_posts, name="user_posts"),
+    #path("user_posts/<str:id>", views.user_posts, name="user_posts"),
     path("update_post/<str:id>", views.update_post, name="update_post"),
     path("add_post", views.add_post, name="add_post"),
 

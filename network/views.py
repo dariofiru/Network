@@ -90,10 +90,8 @@ def register(request):
     else:
         return render(request, "network/register.html")
     
-@login_required
+
 def posts(request, id):
-    #posts = Post.objects.filter(user_post=request.user)
-    records=10
     posts = Post.objects.all()
     posts = posts.order_by("-timestamp").all()
     paginator = Paginator(posts, 3)
@@ -131,7 +129,8 @@ def add_post(request):
             return render(request, "network/index.html", {
                 "PostForm": form
             })
-        
+
+@login_required
 def add_like(request, id):
     if request.method == "PUT":
         post = None 
@@ -147,7 +146,8 @@ def add_like(request, id):
         return render(request, "network/index.html", {
                 "PostForm": form
             })    
-    
+
+@login_required   
 def remove_like(request, id):
     if request.method == "PUT":
         try:
@@ -190,7 +190,7 @@ def update_post(request, id):
 
     return HttpResponseRedirect("/")
         
-        
+@login_required       
 def get_profile(request, id):
     profileT = None
     userT = None
@@ -204,6 +204,7 @@ def get_profile(request, id):
      
     return JsonResponse([profile.serialize() for profile in profileT], safe=False)
 
+@login_required  
 def is_follower(request, id):
     user_followedT = None
     try:
@@ -216,6 +217,7 @@ def is_follower(request, id):
      
     return JsonResponse([{"follower": True}], safe=False)
 
+@login_required  
 def add_follower(request, id):
     
     user_followedT = User.objects.filter(id=id).get()
@@ -225,10 +227,11 @@ def add_follower(request, id):
     followT.save()
     # update profile 
     profile = Profile.objects.filter(user_profile=user_followedT).update(followers=profile.followers+1)
-    profileFollower = Profile.objects.filter(user_profile=request.user).update(followed=profileFollower.followers+1)
+    profileFollower = Profile.objects.filter(user_profile=request.user).update(followed=profileFollower.followed+1)
     #return HttpResponse(f"added {user_followedT} => {followT} ==> {followTest}")
     return HttpResponseRedirect("/")
 
+@login_required  
 def remove_follower(request, id):
     user_followedT = None
     user_followedT = User.objects.filter(id=id)
@@ -236,14 +239,39 @@ def remove_follower(request, id):
     profileFollower = Profile.objects.filter(user_profile=request.user).get() 
     followT = Follower.objects.filter(user_followed__in=user_followedT, user_follower=request.user).delete()
     profile = Profile.objects.filter(user_profile=id).update(followers=profile.followers-1)
-    profileFollower = Profile.objects.filter(user_profile=request.user).update(followers=profileFollower.followers+1)
+    profileFollower = Profile.objects.filter(user_profile=request.user).update(followed=profileFollower.followed-1)
     return HttpResponseRedirect("/")
 
-
-def user_posts(request, id):
-    #posts = Post.objects.filter(user_post=request.user)
+@login_required  
+def user_posts(request, page, id):
     user_posts = User.objects.filter(id=id)
     posts = Post.objects.filter(user_post__in=user_posts)
     posts = posts.order_by("-timestamp").all()
+    paginator = Paginator(posts, 3)
+    posts = paginator.get_page(page)
+     
     #return HttpResponse(f"hello {posts}")
-    return JsonResponse([post.serialize() for post in posts], safe=False)
+    json_final =[]
+    for post in posts:
+        profileT = Profile.objects.filter(user_profile=post.user_post).get()
+        post.user_post
+        json_tmp=post.serialize()   
+        json_tmp["avatar"]=profileT.picture
+        json_final.append(json_tmp)
+    return JsonResponse(json_final, safe=False)
+
+    #return HttpResponse(f"hello {posts}")
+    #return JsonResponse([post.serialize() for post in posts], safe=False)
+
+
+  
+def count_posts(request, id):
+    if id=="0":
+        tot_posts = Post.objects.all() 
+    else:
+        user_posts = User.objects.filter(id=id)
+        tot_posts = Post.objects.filter(user_post__in=user_posts).all()
+
+    tot_posts_count=tot_posts.count() 
+    return HttpResponse(tot_posts_count)
+   
