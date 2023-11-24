@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
 async function view_profile(user_post) {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     document.querySelector('#posts-view').style.display = 'none';
-    document.querySelector('#profile-view').style.display = 'block';
+    document.querySelector('#profile-view').style.display = 'none';
     //document.querySelector('#profile-view').innerHTML="profile!";
     const profile_anag = document.querySelector('#profile-view');
     const profile_img = document.querySelector('#profile-img');
@@ -182,6 +182,7 @@ async function view_profile(user_post) {
             //console.log(profile_follow_tmp.innerHTML)
         }
     });
+    document.querySelector('#profile-view').style.display = 'block';
 }
 
 function edit_post(post_id) {
@@ -423,6 +424,7 @@ async function load_posts(link) {
                 // profile event listener 
                 user_link.addEventListener('click', event => {
                     view_profile(user_post);
+                    return false;
                 });
                 // retrieving user name 
                 post_box.append(user_avatar)
@@ -480,9 +482,6 @@ async function load_posts(link) {
                 //post_box.append(like_button)
 
                 document.querySelector("#posts-view").append(post_box);
-
-                //document.querySelector("#posts-view").append(likes_box);
-                //document.querySelector("#posts-view").append(like_button);
 
                 const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
                 like_button.addEventListener('click', event => { // like_button button 
