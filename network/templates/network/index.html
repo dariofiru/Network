@@ -2,62 +2,57 @@
 {% load static %}
 
 {% block body %}
+
+<h2>{{ request.user.email }}</h2>
+
+{% if user.is_authenticated %}
+
+<div class="post-container2"   id="form-post">
+  <form method="post" action="{% url 'index' %}">
+    {% csrf_token %} 
+    <label for="exampleFormControlTextarea1" class="form-label"><b>Let your friends
+      know what you think:</b></label><br>
+    {{PostForm.post}}
+    <br><input type="submit" value="Post" class="btn btn-primary">
+
+  </form>   
+</div>
+
+
+{% endif %}
+<div id="profile-view" class="card" style="border:2px solid black; width: 18rem;display: none;"><div
+  id="profile-id" style="display: none;">33</div>
+<img id="profile-img" src="#" class="card-img-top" alt="...">
+<div class="card-body">
+  <h5 id="profile-name" class="card-title">Card title</h5>
+  <p id="profile-follow" class="card-text">Some quick example text to build on
+    the card title and make up the bulk of the card's content.</p>
+  <a href="#" id="profile-follow_button" data-profile="0" data-followers="0" data-followed="0"
+   class="btn btn-primary">Go somewhere</a>
+</div>
+</div>
+<br>  
+<nav  aria-label="...">
+  <ul   class="pagination">
+    <li class="page-item" id="page-item-Previous2" value="0">
+      <a id="page-item-Previous-link" class="page-link" href="#">Previous</a>
+    </li>
+
+    <li class="page-item" id="page-item-Next2" value="2">
+      <a id="page-item-Next-link" class="page-link" href="#">Next</a>
+    </li>
+  </ul>
+</nav>
  
- 
-    <h2>{{ request.user.email }}</h2>
-
-    {% if user.is_authenticated %}
-  
-    <div id="form-post"><form method="post"  action="{% url 'index' %}">
-        {% csrf_token %}<br>
-        <label for="exampleFormControlTextarea1" class="form-label">Let everyone know what you think:</label><br>
-        {{PostForm.post}}  
-        <br><input type="submit" value="Post" class="btn btn-primary"> 
-
-    </form><br>
-        </div> 
-        <div id="profile-view" class="card" style="width: 18rem;display: none;"><div id="profile-id" style="display: none;" >33</div>
-        <img id="profile-img" src="..." class="card-img-top" alt="...">
-        <div class="card-body">
-          <h5 id="profile-name" class="card-title">Card title</h5>
-          <p id="profile-follow" class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <a href="#" id="profile-follow_button" class="btn btn-primary">Go somewhere</a>
-        </div>
-      </div>
-       
-          {% endif %}
-        
-          
-        <br>
-        <nav aria-label="...">
-            <ul class="pagination">
-              <li class="page-item" id="page-item-Previous2"  value="0">
-                <a id="page-item-Previous-link" class="page-link" href="#">Previous</a>
-              </li>
-              
-              <li class="page-item" id="page-item-Next2"  value="2">
-                <a id="page-item-Next-link" class="page-link" href="#">Next</a>
-              </li>
-            </ul>
-          </nav>
-
-    <div id="posts-view" margin="30px"> 
-        
-    </div>
-
    
-
-        
-         
-
+  <div id="posts-view" >
+  </div>
  
 
 {% endblock %}
 
 {% block script %}
 <script>var current_user='{{ user.username }}'</script>
-    <script src="{% static 'network/posts.js' %}"></script> 
+<script src="{% static 'network/posts.js' %}"></script>
 
-    
 {% endblock %}
-

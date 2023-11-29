@@ -1,16 +1,29 @@
 document.addEventListener('DOMContentLoaded', function () {
+    if (current_user.length == 0) {} // user not logged in
+    else {   
+    const follow = document.querySelector("#following-link")
+    var is_follow = false;
     
-    let profile_flag =""
-    
+    follow.addEventListener('click', event => { 
+        document.querySelector("#posts-view").innerHTML = "";
+        is_follow=true;
+        load_posts(`following/1`);
+        return false;
+         
+    });
+    }
     previous = document.querySelector("#page-item-Previous2")
     next = document.querySelector("#page-item-Next2")
     var previous_link = previous.value;
     var next_link = next.value;
-    console.log("new stuff " + previous_link + " next: "+ next_link)
+   // console.log("new stuff " + previous_link + " next: "+ next_link)
     next.addEventListener('click', event => {
-        if (current_user.length == 0) {}
+        console.log("follow: "+ is_follow)
+        if (current_user.length == 0){   // user not logged in
+        profile_flag=  document.querySelector('#profile-view').style.display ; // is profile? 
+        console.log("profile_flag: "+profile_flag)}
         else {
-        profile_flag=  document.querySelector('#profile-view').style.display ;
+        profile_flag=  document.querySelector('#profile-view').style.display ; // is profile? 
         console.log("profile_flag: "+profile_flag)
         }
         previous = document.querySelector("#page-item-Previous2").value
@@ -21,28 +34,40 @@ document.addEventListener('DOMContentLoaded', function () {
         
         document.querySelector("#page-item-Previous2").value = previous + 1
         document.querySelector("#page-item-Next2").value = next + 1
-        if (current_user.length == 0) {
-            load_posts_visitor(`posts/${next}`);
+        if (current_user.length == 0) { // visitor
+            if(profile_flag!="none"){
+                let user_post = document.querySelector("#profile-id").innerHTML;
+                load_posts_visitor(`user_posts/${next}/${user_post}`);
+            }else{
+                load_posts_visitor(`posts/${next}`);
+            }
         }
         else {
             if(profile_flag!="none"){
                 let user_post = document.querySelector("#profile-id").innerHTML;
-                console.log("profile id: "+user_post)
                 load_posts(`user_posts/${next}/${user_post}`);
             }else{
-                load_posts(`posts/${next}`);
+                if (is_follow){
+                    load_posts(`following/${next}`);
+                }
+                else {
+                    load_posts(`posts/${next}`);
+                }
             }          
-        }
+            }
     }
     return false;
     });
     previous.addEventListener('click', event => {
-        if (current_user.length == 0) {}
+        
+        if (current_user.length == 0){   // user not logged in
+            profile_flag=  document.querySelector('#profile-view').style.display ; // is profile? 
+            console.log("profile_flag: "+profile_flag)}
         else {
         profile_flag=  document.querySelector('#profile-view').style.display ;
         console.log("profile_flag: "+profile_flag)
         }
-        console.log("profile_flag: "+profile_flag)
+      
         previous = document.querySelector("#page-item-Previous2").value
         next = document.querySelector("#page-item-Next2").value
         console.log("b: " + previous + "f: " + next)
@@ -53,7 +78,12 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelector("#page-item-Next2").value = next - 1
          
         if (current_user.length == 0) {
-            load_posts_visitor(`posts/${previous}`);
+            if(profile_flag!="none"){
+                let user_post = document.querySelector("#profile-id").innerHTML;
+                load_posts_visitor(`user_posts/${previous}/${user_post}`);
+            }else{
+                load_posts_visitor(`posts/${previous}`);
+            }
         }
         else {
             if(profile_flag!="none"){
@@ -61,9 +91,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log("profile id: "+user_post)
                 load_posts(`user_posts/${previous}/${user_post}`);
             }else{
-                load_posts(`posts/${previous}`);
+                if (is_follow){
+                    load_posts(`following/${previous}`);
+                }
+                else {
+                    load_posts(`posts/${previous}`);
+                }
             }    
-        }
+            }
         }
         return false;
     });
@@ -72,13 +107,93 @@ document.addEventListener('DOMContentLoaded', function () {
         load_posts_visitor("posts/1");
     }
     else {
-        console.log("full list")
-        load_posts("posts/1");
+        if (is_follow){
+            load_posts(`following/1`);
+        }
+        else {
+            load_posts(`posts/1`);
+        }
+         
     }
+
+    function follow_f(){
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const profile_follow_button  = document.querySelector('#profile-follow_button');
+        const data_profile_id=profile_follow_button.dataset.profile;
+        
+
+
+        if (profile_follow_button.text === "Unfollow") {
+             
+            fetch(`/remove_follower/${data_profile_id}`, {
+               method: 'PUT',
+               headers: { 'X-CSRFToken': csrftoken },
+               mode: 'same-origin',
+               body: JSON.stringify({
+                   csrfmiddlewaretoken: csrftoken
+               })
+           }).then(response => {
+               return response.text()
+           }).then(data => {
+                followers =  Number(profile_follow_button.dataset.followers) 
+                followed = Number(profile_follow_button.dataset.followed)
+                console.log("rem followers: "+followers)
+               profile_follow_button.text = `Follow`
+               const profile_follow_tmp = document.querySelector('#profile-follow');
+               followers = followers - 1;
+               profile_follow_button.dataset.followers=followers
+               if (followers<0){followers= 0}
+               profile_follow_tmp.innerHTML = `Followers: ${followers}<br>
+                   Followed: ${followed} `;    
+             
+           }
+           );
+    
+       }
+       else {
+            console.log("add follower: "+ profile_follow_button.text)
+           fetch(`/add_follower/${data_profile_id}`, {
+               method: 'PUT',
+               headers: { 'X-CSRFToken': csrftoken },
+               mode: 'same-origin',
+               body: JSON.stringify({
+                   csrfmiddlewaretoken: csrftoken
+               })
+           }).then(response => {
+               return response.text()
+           }).then(data => {
+           
+            followers =  Number(profile_follow_button.dataset.followers) 
+            followed = Number(profile_follow_button.dataset.followed)
+            console.log("add followers: "+followers)
+               profile_follow_button.text = `Unfollow`
+               const profile_follow_tmp = document.querySelector('#profile-follow');
+               followers = followers + 1;
+               profile_follow_button.dataset.followers=followers
+               profile_follow_tmp.innerHTML = `Followers: ${followers}<br>
+                 Followed: ${followed}
+                 `;
+           }
+       ); 
+       }
+    }
+    
+    const  generic_profile_follow_button  = document.querySelector('#profile-follow_button');
+    console.log("boh: "+generic_profile_follow_button.innerHTML)
+    //const data_profile_id=generic_profile_follow_button.dataset.profile;
+      //  console.log("event data-profile: "+data_profile_id)
+    //generic_profile_follow_button.removeEventListener("click", follow_f, false);
+    generic_profile_follow_button.addEventListener("click", follow_f, false);
 
 });
 
+
+
+
+
+
 async function view_profile(user_post) {
+     console.log("profile issue")
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     document.querySelector('#posts-view').style.display = 'none';
     document.querySelector('#profile-view').style.display = 'none';
@@ -87,8 +202,17 @@ async function view_profile(user_post) {
     const profile_img = document.querySelector('#profile-img');
     const profile_name = document.querySelector('#profile-name');
     const profile_follow = document.querySelector('#profile-follow');
-    const profile_follow_button = document.querySelector('#profile-follow_button');
-    console.log(user_post);
+    const profile_follow_button  = document.querySelector('#profile-follow_button');
+    const data_profile_id=profile_follow_button.dataset.profile;
+     
+     console.log("data-profile: "+data_profile_id)
+     profile_follow_button.dataset.profile = user_post
+     console.log("data-profile updated: "+data_profile_id)
+    //profile_follow_button.innerHTML = 'test';
+    profile_follow_button.id="profile-follow_button"
+    profile_follow_button.style.margin = "5px";
+    profile_follow_button.className = 'btn btn-outline-info';
+   // profile_anag.append(profile_follow_button)
     let is_follower = false;
     await fetch(`/is_follower/${user_post}`)
         .then(response => response.text())
@@ -102,7 +226,7 @@ async function view_profile(user_post) {
     let followers = "";
     let followed = "";
 
-    fetch(`/get_profile/${user_post}`)
+    await fetch(`/get_profile/${user_post}`)
         .then(response => response.text())
         .then(text => {
             var profile = JSON.parse(text);
@@ -112,16 +236,21 @@ async function view_profile(user_post) {
                 profile_img.style.margin = "5px"
                 followers = profile[i].followers;
                 followed = profile[i].followed;
+                profile_follow_button.dataset.followers = followers
+                profile_follow_button.dataset.followed = followed
                 profile_name.innerHTML = `Nome: ${profile[i].profile_name}`
                 profile_follow.innerHTML = `Followers: ${profile[i].followers}<br>
             Followed: ${profile[i].followed}
             `;
                 if (profile[i].profile_name === current_user) {
+                    console.log("button check 0")
                     profile_follow_button.style.display = 'none';
                 } else {
-                    // console.log(typeof(is_follower)+ " => "+ is_follower)
+                    console.log("button check 1")
+                    profile_follow_button.style.display = 'block';
+                     console.log(typeof(is_follower)+ " => "+ is_follower)
                     if (is_follower) {
-
+                         
                         profile_follow_button.text = "Unfollow"
                     } else {
                         profile_follow_button.text = "Follow"
@@ -130,14 +259,23 @@ async function view_profile(user_post) {
                 // console.log(profile[i].profile_name);   
             }
         });
+        //console.log("user post: "+ user_post)
+    //profile_anag.append(profile_follow_button)    
+    //console.log("user post2: "+ user_post)
     document.querySelector('#posts-view').style.display = 'none';
-    document.querySelector("#profile-id").innerHTML=user_post;
+    const profileid= document.querySelector("#profile-id")
+    profileid.innerHTML=user_post;
+    
     load_posts(`user_posts/1/${user_post}`);
+   
 
+    // here was my follow_f function :( 
+
+/* 
     profile_follow_button.addEventListener('click', event => {
         if (profile_follow_button.text === "Unfollow") {
-            // console.log("remove  follower")
-            fetch(`/remove_follower/${user_post}`, {
+             console.log("remove  follower: "+ user_post)
+             fetch(`/remove_follower/${user_post}`, {
                 method: 'PUT',
                 headers: { 'X-CSRFToken': csrftoken },
                 mode: 'same-origin',
@@ -146,20 +284,19 @@ async function view_profile(user_post) {
                 })
             }).then(response => {
                 return response.text()
-            }).then(data =>
-                // this is the data we get after putting our data,
-              console("")
+            }).then(data => {
+                profile_follow_button.text = "Follow"
+                const profile_follow_tmp = document.querySelector('#profile-follow');
+                followers = followers - 1;
+                profile_follow_tmp.innerHTML = `Followers: ${followers}<br>
+                    Followed: ${followed} `;    
+              console.log("qui")
+            }
             );
-            profile_follow_button.text = "Follow"
-            const profile_follow_tmp = document.querySelector('#profile-follow');
-            followers = followers - 1;
-            profile_follow_tmp.innerHTML = `Followers: ${followers}<br>
-                Followed: ${followed}
-                `;
-            console.log(profile_follow_tmp.innerHTML)
+
         }
         else {
-            // console.log("add follower")
+             console.log("add follower: "+ profile_follow_button.text)
             fetch(`/add_follower/${user_post}`, {
                 method: 'PUT',
                 headers: { 'X-CSRFToken': csrftoken },
@@ -169,19 +306,17 @@ async function view_profile(user_post) {
                 })
             }).then(response => {
                 return response.text()
-            }).then(data =>
-                // this is the data we get after putting our data,
-                console.log("")
-            );
-            profile_follow_button.text = "Unfollow"
-            const profile_follow_tmp = document.querySelector('#profile-follow');
-            followers = followers + 1;
-            profile_follow_tmp.innerHTML = `Followers: ${followers}<br>
-              Followed: ${followed}
-              `;
-            //console.log(profile_follow_tmp.innerHTML)
+            }).then(data => {
+                profile_follow_button.text = "Unfollow"
+                const profile_follow_tmp = document.querySelector('#profile-follow');
+                followers = followers + 1;
+                profile_follow_tmp.innerHTML = `Followers: ${followers}<br>
+                  Followed: ${followed}
+                  `;
+            }
+        ); 
         }
-    });
+    }); */
     document.querySelector('#profile-view').style.display = 'block';
 }
 
@@ -205,7 +340,7 @@ function edit_post(post_id) {
     text_box.append(discard);
 
     save.addEventListener('click', event => {
-        console.log("saving");
+        
         fetch(`/update_post/${post_id}`, {
             method: 'PUT',
             headers: { 'X-CSRFToken': csrftoken },
@@ -221,7 +356,7 @@ function edit_post(post_id) {
     });
 
     discard.addEventListener('click', event => {
-        console.log("disscard");
+     
         text_box.innerHTML = message;
         text_box.removeChild(text_area);
     });
@@ -242,24 +377,82 @@ async function fetchLikes() {
     return my_likesR;
 }
 
+async function view_profile_visitor(user_post) {
+     
+    const profile_follow_button = document.querySelector('#profile-follow_button');
+    profile_follow_button.style.display = 'none';
+    document.querySelector('#posts-view').style.display = 'none';
+    document.querySelector('#profile-view').style.display = 'none';
+    //document.querySelector('#profile-view').innerHTML="profile!";
+    const profile_anag = document.querySelector('#profile-view');
+    const profile_img = document.querySelector('#profile-img');
+    const profile_name = document.querySelector('#profile-name');
+    const profile_follow = document.querySelector('#profile-follow');
+     
+    console.log(user_post);
+     
+    
+    let followers = "";
+    let followed = "";
+
+    fetch(`/get_profile/${user_post}`)
+        .then(response => response.text())
+        .then(text => {
+            var profile = JSON.parse(text);
+            for (var i in profile) {
+                profile_img.src = profile[i].picture
+                profile_img.style.width = "100px"
+                profile_img.style.margin = "5px"
+                followers = profile[i].followers;
+                followed = profile[i].followed;
+                profile_name.innerHTML = `Nome: ${profile[i].profile_name}`
+                profile_follow.innerHTML = `Followers: ${profile[i].followers}<br>
+            Followed: ${profile[i].followed}
+            `;
+                 
+                // console.log(profile[i].profile_name);   
+            }
+        });
+    document.querySelector('#posts-view').style.display = 'none';
+    document.querySelector("#profile-id").innerHTML=user_post;
+    load_posts_visitor(`user_posts/1/${user_post}`);
+ 
+    document.querySelector('#profile-view').style.display = 'block';
+}
+
 async function load_posts_visitor(link) {
+    console.log("visitor posts")
+    let param_list = link.match(/\d+/g);
     let page = Number(link.match(/\d+/));
     document.querySelector('#posts-view').style.display = 'block';
     let total_records = 0;
-    count_link= `/count_posts/0`
 
+    if(param_list.length>1){
+        count_link= `/count_posts/${param_list[1]}`
+    }else {
+    count_link= `/count_posts/0`
+    }
     await fetch(count_link)
     .then(response => response.text())
     .then(async text => {
         total_records = Number(text)
     }); 
-
+    console.log("total_records: " +total_records)
+    if (link.toLowerCase().indexOf("user_") === -1) {
+        document.querySelector('#posts-view').style.display = 'block';
+        document.querySelector('#profile-view').style.display = 'none';
+    } else {
+           
+        document.querySelector('#posts-view').innerHTML = "";
+        document.querySelector('#posts-view').style.display = 'block';
+        //document.querySelector('#profile-view').style.display = 'none';    
+    }
     await fetch(link)
         .then(response => response.text())
         .then(async text => {
             var post = JSON.parse(text);
             var post_Count = JSON.parse(text).length
-            var showed_records= page*3
+            var showed_records= page*10
             console.log("post count: " + post_Count);
 
             const previous = document.querySelector("#page-item-Previous2")
@@ -297,62 +490,91 @@ async function load_posts_visitor(link) {
                 user_avatar.style.width = "40px"
                 user_avatar.style.border = "1px solid gray"
                 user_avatar.src = `${post[i].avatar}`;
+                user_link = document.createElement("a");
+                user_link.text = ` ${post[i].userN}`;
 
-                user_box.innerHTML = `${post[i].userN} <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font>`;
+                user_link.style.margin = "8px";
+                user_link.style.fontSize = "20px";
+                user_link.style.fontWeight = "bold";
+                user_link.style.color = "black";
+                user_link.style.margin = "0px";
+                user_link.href = "#";
+                user_box.innerHTML = ` <font style="font-size:12px"><i>on ${post[i].timestamp} wrote:</i></font>`;
+                
+                // profile event listener 
+                user_link.addEventListener('click', event => {
+                    console.log("click profile visitor")
+                    view_profile_visitor(user_post);
+                    return false;
+                });
+                // retrieving user name 
                 post_box.append(user_avatar)
+
+                post_box.append(user_link)
                 post_box.append(user_box);
                 text_box.innerHTML = `${post[i].post}`;
+                text_box.style.color="#090373"  
+                text_box.style.fontWeight="bold"
+                text_box.style.fontSize="18px"
                 post_box.append(text_box);
                 post_box.className = 'post_box';
                 post_box.id = `post_box${post_id}`;
-                post_box.style.border = "1px solid gray";
+                post_box.style.border = "3px solid #057AFD";
+                post_box.style.boxShadow="2px 2px  2px  #05ADFD"
                 post_box.style.borderRadius = "30px"
-                post_box.style.margin = "5px"
+                post_box.style.margin = "8px"
                 post_box.style.paddingLeft = "20px"
                 post_box.style.paddingTop = "10px"
-
+                 
+                 
                 //console.log(post_id)
                 const likes_box = document.createElement("div");
-                likes_box.style.paddingRight = "10px"
-                likes_box.style.paddingBottom = "5px"
+                likes_box.style.paddingRight = "30px"
+                likes_box.style.paddingBottom = "10px"
                 likes_box.style.align = "right"
                 likes_box.className = 'likes_box';
                 likes_box.innerHTML = `<br><b>Likes:</b> ${likes}   `;
                 post_box.append(likes_box)
                 document.querySelector("#posts-view").append(post_box);
-
-                likes_box.innerHTML = `<br>Likes: ${likes}   `;
+                //return false;
 
             }
 
 
-            console.log(text);
+           // console.log(text);
         });
 }
 
 async function load_posts(link) {
-
+    
     let param_list = link.match(/\d+/g);
     let total_records = 0;
     let page = Number(param_list[0])
-    console.log("link: " + link)
-    console.log("page: " + page)
+
     if(param_list.length>1){
         count_link= `/count_posts/${param_list[1]}`
     }
     else {
-        count_link= `/count_posts/0`
+        if (link.includes("following")){
+            count_link= `/count_posts/following`
+        }else {
+            count_link= `/count_posts/0`
+        }
     }
 
-        await fetch(count_link)
+        await fetch(count_link) // retreive tot # of records for pagination
         .then(response => response.text())
         .then(async text => {
             total_records = Number(text)
         }); 
-        console.log("total_records: " + total_records)
+        //console.log("total_records: "+ total_records)
+        if(total_records=== 0 && link.includes("following")) {
+            document.querySelector('#profile-view').style.display = 'none';
+            document.querySelector('#posts-view').innerHTML=` <h1>You're not following anyone yet!</h1>` 
+            return false;
+        }
     if (link.toLowerCase().indexOf("user_") === -1) {
-
-        //if(link === "posts/1"){
+ 
         document.querySelector('#form-post').style.display = 'block';
         document.querySelector('#posts-view').style.display = 'block';
         document.querySelector('#profile-view').style.display = 'none';
@@ -374,8 +596,8 @@ async function load_posts(link) {
            // console.log(text);
             var post = JSON.parse(text);
             var post_Count = JSON.parse(text).length
-            var showed_records= page*3
-            console.log("post count: " + post_Count);
+            var showed_records= page*10
+            //console.log("post count: " + post_Count);
             const previous = document.querySelector("#page-item-Previous2")
             const next = document.querySelector("#page-item-Next2")
             if (page < 2) {
@@ -402,6 +624,9 @@ async function load_posts(link) {
                 const user_box = document.createElement("span");
                 const text_box = document.createElement("div");
                 text_box.margin = "5px";
+                text_box.style.color="#090373"  
+                text_box.style.fontWeight="normal"
+                text_box.style.fontSize="18px"
                 text_box.id = `text_box${post_id}`;
 
                 user_avatar = document.createElement("img");
@@ -446,9 +671,10 @@ async function load_posts(link) {
                 post_box.append(text_box);
                 post_box.className = 'post_box';
                 post_box.id = `post_box${post_id}`;
-                post_box.style.border = "1px solid gray";
+                post_box.style.border = "3px solid #057AFD";
+                post_box.style.boxShadow="2px 2px  2px  #05ADFD"
                 post_box.style.borderRadius = "30px"
-                post_box.style.margin = "5px"
+                post_box.style.margin = "8px"
                 post_box.style.paddingLeft = "20px"
                 post_box.style.paddingTop = "10px"
 
@@ -518,7 +744,7 @@ async function load_posts(link) {
                         action_like = `/add_like/${post_id}`
                         I_like = false
                     }
-                    likes_box.innerHTML = `<br>Likes: ${likes}   `;
+                    likes_box.innerHTML = `<br><b>Likes:</b> ${likes}   `;
                     likes_box.prepend(like_button)
                     return false;
                 });

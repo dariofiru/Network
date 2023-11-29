@@ -7,7 +7,28 @@
     margin:5px;
     width:60%;
     border-radius: 25px;
+
 }
  
 .icon-hoover:hover { cursor: pointer; }
-   
+
+#posts-view {
+    width: 72%;
+    margin: auto;
+     
+  }
+ 
+.post-container2{
+    background-color: #A1C8F9;color:#090373;
+        border: 1px solid gray;
+        margin:10px;
+     padding:15px;
+      width:50%;
+      border-radius: 20px;
+       
+    }
+
+.textarea-class{
+    width:100%;
+}    
+ 

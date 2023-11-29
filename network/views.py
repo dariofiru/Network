@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -94,7 +95,7 @@ def register(request):
 def posts(request, id):
     posts = Post.objects.all()
     posts = posts.order_by("-timestamp").all()
-    paginator = Paginator(posts, 3)
+    paginator = Paginator(posts, 10)
     posts = paginator.get_page(id)
      
     #return HttpResponse(f"hello {posts}")
@@ -190,7 +191,7 @@ def update_post(request, id):
 
     return HttpResponseRedirect("/")
         
-@login_required       
+   
 def get_profile(request, id):
     profileT = None
     userT = None
@@ -223,8 +224,12 @@ def add_follower(request, id):
     user_followedT = User.objects.filter(id=id).get()
     profile = Profile.objects.filter(user_profile=user_followedT).get()
     profileFollower = Profile.objects.filter(user_profile=request.user).get() 
-    followT = Follower(user_followed=user_followedT, user_follower=request.user)
-    followT.save()
+    try:
+        followT = Follower(user_followed=user_followedT, user_follower=request.user)
+        followT.save()
+    except IntegrityError:
+        return HttpResponseRedirect("/")
+         
     # update profile 
     profile = Profile.objects.filter(user_profile=user_followedT).update(followers=profile.followers+1)
     profileFollower = Profile.objects.filter(user_profile=request.user).update(followed=profileFollower.followed+1)
@@ -236,25 +241,31 @@ def remove_follower(request, id):
     user_followedT = None
     user_followedT = User.objects.filter(id=id)
     profile = Profile.objects.filter(user_profile=id).get() 
-    profileFollower = Profile.objects.filter(user_profile=request.user).get() 
-    followT = Follower.objects.filter(user_followed__in=user_followedT, user_follower=request.user).delete()
-    profile = Profile.objects.filter(user_profile=id).update(followers=profile.followers-1)
-    profileFollower = Profile.objects.filter(user_profile=request.user).update(followed=profileFollower.followed-1)
+    profileFollower = Profile.objects.filter(user_profile=request.user).get()
+    
+    try:
+        followT = Follower.objects.filter(user_followed__in=user_followedT, user_follower=request.user).delete()
+        profile = Profile.objects.filter(user_profile=id).update(followers=profile.followers-1)
+        profileFollower = Profile.objects.filter(user_profile=request.user).update(followed=profileFollower.followed-1)
+    except IntegrityError:
+        return HttpResponseRedirect("/")
+         
+    #profile = Profile.objects.filter(user_profile=id).update(followers=profile.followers-1)
+    #profileFollower = Profile.objects.filter(user_profile=request.user).update(followed=profileFollower.followed-1)
     return HttpResponseRedirect("/")
 
-@login_required  
+ 
 def user_posts(request, page, id):
     user_posts = User.objects.filter(id=id)
     posts = Post.objects.filter(user_post__in=user_posts)
     posts = posts.order_by("-timestamp").all()
-    paginator = Paginator(posts, 3)
+    paginator = Paginator(posts, 10)
     posts = paginator.get_page(page)
      
     #return HttpResponse(f"hello {posts}")
     json_final =[]
     for post in posts:
         profileT = Profile.objects.filter(user_profile=post.user_post).get()
-        post.user_post
         json_tmp=post.serialize()   
         json_tmp["avatar"]=profileT.picture
         json_final.append(json_tmp)
@@ -268,10 +279,42 @@ def user_posts(request, page, id):
 def count_posts(request, id):
     if id=="0":
         tot_posts = Post.objects.all() 
+    elif id=="following":
+        try:
+            follows = Follower.objects.filter(user_follower=request.user).values('user_followed')
+        except Follower.DoesNotExist:
+            return JsonResponse([{"follower": False}], safe=False)
+    
+        tot_posts = Post.objects.filter(user_post__in=follows )
+        tot_posts_count=tot_posts.count()
     else:
         user_posts = User.objects.filter(id=id)
         tot_posts = Post.objects.filter(user_post__in=user_posts).all()
 
     tot_posts_count=tot_posts.count() 
     return HttpResponse(tot_posts_count)
+
+@login_required  
+def following(request, page):
+    follows = None 
+    try:
+        follows = Follower.objects.filter(user_follower=request.user).values('user_followed')
+    except Follower.DoesNotExist:
+        return JsonResponse([{"follower": False}], safe=False)
+    
+    posts = Post.objects.filter(user_post__in=follows )
+    posts = posts.order_by("-timestamp").all()
+    #return JsonResponse([post.serialize() for post in posts], safe=False)
+    paginator = Paginator(posts, 10)
+    posts = paginator.get_page(page)
+     
+    #return HttpResponse(f"hello {posts}")
+    json_final =[]
+    for post in posts:
+        profileT = Profile.objects.filter(user_profile=post.user_post).get()
+        post.user_post
+        json_tmp=post.serialize()
+        json_tmp["avatar"]=profileT.picture
+        json_final.append(json_tmp)
+    return JsonResponse(json_final, safe=False)
    

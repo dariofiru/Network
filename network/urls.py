@@ -27,6 +27,7 @@ urlpatterns = [
     path("update_post/<str:id>", views.update_post, name="update_post"),
     path("add_post", views.add_post, name="add_post"),
 
+    path("following/<str:page>", views.following, name="following"),
 
     path("login", views.login_view, name="login"),
     path("logout", views.logout_view, name="logout"),

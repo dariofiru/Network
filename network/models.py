@@ -5,6 +5,9 @@ from django.db import models
 class User(AbstractUser):
     pass
 
+    def __str__(self) -> str:
+        return f"{self.id} => {self.username}"
+
     def serialize(self):
         return {
             "username": self.username 
@@ -60,7 +63,10 @@ class Follower(models.Model):
             "user_followed": self.user_followed.id,
             "user_follower": self.user_follower.id
            # "timestamp": self.timestamp.strftime("%b %d %Y, %I:%M %p") 
-        }   
+        } 
+
+    class Meta:
+        unique_together = ('user_followed', 'user_follower')  
 
 class Profile(models.Model):
     user_profile = models.ForeignKey("User", on_delete=models.CASCADE, related_name="profile")
